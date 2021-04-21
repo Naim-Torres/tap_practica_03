@@ -2,6 +2,7 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -51,7 +52,7 @@ public class CaloriasRequeridas extends JFrame {
         datosN.add(titulo);
         titulo.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         datosC.add(formarPanelCampos(), BorderLayout.WEST);
-        //datosC.add(crearSelecionActividad(), BorderLayout.EAST);
+        datosC.add(crearSelecionActividad(), BorderLayout.EAST);
         base.add(titulo, BorderLayout.NORTH);
         base.add(datosC, BorderLayout.CENTER);
         //el método formarPanelResultados() integra la segunda seccion de la GUI
@@ -143,9 +144,58 @@ public class CaloriasRequeridas extends JFrame {
                         BorderFactory.createEmptyBorder(5,5,10,5)
                 )
         );
+
         return camposPanel;
 
     }
+    public ImageIcon imagenActividad(int a){
+        String ruta = "/imagenes/";
+        String nombreImagen[] = {"sedentario.jpg","leve.jpg","medio.jpg","intenso.jpg"};
+        URL url = getClass().getResource(ruta+nombreImagen[a]);
+
+        Image reescalado = (new ImageIcon(url).getImage()).getScaledInstance(100,93,Image.SCALE_SMOOTH);
+        return new ImageIcon(reescalado);
+    }
+    public String textoActividad(int a){
+        String descp[]={"No realizan prácticamente nada de ejercicio",
+                        "Realizan ejercicios suaves de 1 a 3 veces por semana",
+                        "Practican deporte de 3 a 5 veces por semana",
+                        "Practican deporte de 6 a 7 días por semana"};
+        String str = descp[a];
+        return str;
+    }
+    public JPanel crearSelecionActividad(){
+        JPanel seleccion = new JPanel();
+        JPanel pActiv = new JPanel();
+        JPanel pDesAct = new JPanel();
+        seleccion.setLayout(new BorderLayout());
+        //7e
+        actividad = new JComboBox(ACTIVIDADES);
+        descripcionActividad = new JLabel(textoActividad(0),imagenActividad(0),SwingConstants.CENTER);
+        //7f
+        descripcionActividad.setHorizontalTextPosition(JLabel.CENTER);
+        descripcionActividad.setVerticalTextPosition(JLabel.NORTH);
+        //ii)
+        pActiv.add(actividad);
+        pDesAct.add(descripcionActividad);
+        //iii
+        pActiv.setBorder(
+            BorderFactory.createCompoundBorder(
+                    BorderFactory.createTitledBorder("Selecciona la actividad"),
+                    BorderFactory.createEmptyBorder(5,5,5,5)
+            )
+        );
+        pDesAct.setBorder(
+            BorderFactory.createCompoundBorder(
+                    BorderFactory.createTitledBorder(""),
+                    BorderFactory.createEmptyBorder(5,5,5,5)
+            )
+        );
+        seleccion.add(pActiv,BorderLayout.NORTH);
+        seleccion.add(pDesAct,BorderLayout.SOUTH);
+        return seleccion;
+    }
+
     public static void main(String args[]){
         CaloriasRequeridas calo = new CaloriasRequeridas();
     }
