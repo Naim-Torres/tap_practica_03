@@ -150,7 +150,7 @@ public class CaloriasRequeridas extends JFrame {
     }
     public ImageIcon imagenActividad(int a){
         String ruta = "/imagenes/";
-        String nombreImagen[] = {"sedentario.jpg","leve.jpg","medio.jpg","intenso.jpg"};
+        String nombreImagen[]={"ligera.jpg","moderada.jpg","muyactiva.jpg","sedentario.jpg"};
         URL url = getClass().getResource(ruta+nombreImagen[a]);
 
         Image reescalado = (new ImageIcon(url).getImage()).getScaledInstance(100,93,Image.SCALE_SMOOTH);
