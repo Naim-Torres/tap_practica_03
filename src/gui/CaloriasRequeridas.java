@@ -1,7 +1,10 @@
 package gui;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
+import java.awt.event.*;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
@@ -63,6 +66,10 @@ public class CaloriasRequeridas extends JFrame {
 
     }
     public JPanel formarPanelCampos(){
+        AdmonAccion admonAccion = new AdmonAccion();
+        AdmonFocus admonFocus = new AdmonFocus();
+        AdmonEvenTeclado admonTeclado = new AdmonEvenTeclado();
+        AdmonMouseAdap admonMouse = new AdmonMouseAdap();
         //Formacion del panel para los campos de los datos
         //Se crea el panel, lo titulos, y demas elementos que los conforman
         JPanel camposPanel = new JPanel();
@@ -93,7 +100,7 @@ public class CaloriasRequeridas extends JFrame {
         SpinnerDateModel dma = new SpinnerDateModel(new Date(),null,null,Calendar.DATE);
         fechaNac = new JSpinner(dma);
         //3f
-        JSpinner.DateEditor fmda = new JSpinner.DateEditor(fechaNac,"yyyy.mm.dd");
+        JSpinner.DateEditor fmda = new JSpinner.DateEditor(fechaNac,"yyyy/mm/dd");
         fechaNac.setEditor(fmda);
         //5d
         SpinnerNumberModel modEst = new SpinnerNumCiclico(MIN_ESTATURA,MAX_ESTATURA);
@@ -144,6 +151,39 @@ public class CaloriasRequeridas extends JFrame {
                         BorderFactory.createEmptyBorder(5,5,10,5)
                 )
         );
+        fechaNac.addChangeListener(
+                new ChangeListener() {
+                    @Override
+                    public void stateChanged(ChangeEvent e) {
+                        Calendar fecha = Calendar.getInstance();//Usada como auxiliar
+                        fecha.setTime((Date) fechaNac.getValue()); //Se le asigna la fecha del
+                        edad = fechaa.get(Calendar.YEAR) - fecha.get(Calendar.YEAR);
+                        //Se le asgian el valor de la edad
+                        if(fecha.get(Calendar.MONTH) < fechaa.get(Calendar.MONTH))
+                            edad--;
+                        else
+                            if(fecha.get(Calendar.MONTH) == fechaa.get(Calendar.MONTH) &&
+                                fecha.get(Calendar.DATE) < fechaa.get(Calendar.DATE))
+                                edad--;
+                        if(edad < MIN_EDAD){
+                            //Has que fechaNac tome el valor adecuado
+                            fechaNac.repaint();
+                        }
+                        else{
+                            tAnios.setText("Años: "+edad);
+                        }
+                    }
+                }
+        );
+        nombre.setActionCommand("nombre");
+        peso.setActionCommand("peso");
+
+        nombre.addActionListener(admonAccion);
+        nombre.addFocusListener(admonFocus);
+        nombre.addMouseListener(admonMouse);
+        peso.addActionListener(admonAccion);
+        peso.addFocusListener(admonFocus);
+        peso.addMouseListener(admonMouse);
 
         return camposPanel;
 
@@ -194,6 +234,82 @@ public class CaloriasRequeridas extends JFrame {
         seleccion.add(pActiv,BorderLayout.NORTH);
         seleccion.add(pDesAct,BorderLayout.SOUTH);
         return seleccion;
+    }
+
+    private class AdmonEvenTeclado extends KeyAdapter{
+
+        @Override
+        public void keyTyped(KeyEvent ke){
+            char k = ke.getKeyChar();
+            JTextField productor = (JTextField) ke.getSource();
+            if(productor == nombre){
+                if(nombre.getSelectedText()!=null)
+                    nombre.setText("");
+                if(!Character.isAlphabetic(k) && k!=KeyEvent.VK_SPACE)
+                    ke.consume();
+            }
+            if(productor == peso){
+                //Aqui solo deben aceptar digitos
+                if(!Character.isDigit(ke.getKeyChar())){
+                    ke.consume();
+                }
+            }
+        }
+    }
+    private class AdmonFocus extends FocusAdapter{
+        @Override
+        public void focusGained(FocusEvent avt){
+            Object o = avt.getSource();
+            if(o instanceof JTextField){
+                JTextField txt = (javax.swing.JTextField) o;
+                //Has que el texto de txt se seleccione usando los métodos
+                txt.setSelectionStart(0);
+                txt.setSelectionEnd(txt.getText().length());
+            }
+
+        }
+    }
+    private class AdmonMouseAdap extends MouseAdapter{
+        @Override
+        public void mousePressed(MouseEvent map){
+            if(map.getSource() == nombre && nombre.getCaretPosition() == 0){
+                nombre.setText("");
+            }
+            if(map.getSource() == peso && peso.getCaretPosition() == 0){
+                peso.setText("");
+            }
+        }
+    }
+    private class AdmonAccion implements ActionListener{
+        @Override
+        public void actionPerformed(ActionEvent ae){
+            switch(ae.getActionCommand()){
+                case "nombre":
+                    validaNombre = false;
+                    if(nombre.getText() !="" && !nombre.getText().equals(DA_NOMBRE)){
+                        validaNombre = true;
+                        fechaNac.requestFocus();
+                    }
+                    else
+                    nombre.requestFocus();
+                    break;
+                case "peso":
+                    int vPeso = 0;
+                    validaPeso = false;
+                    if(peso.getText()!="" && !peso.getText().equals(DA_PESO)){
+                        if(Integer.parseInt(peso.getText()) < 40 || Integer.parseInt(peso.getText()) > 120){
+                            validaPeso = true;
+                            JOptionPane.showMessageDialog(null,"Peso fuera de los limtes (mayor a 40 kgs y menor a 120 kgs)");
+                            peso.requestFocus();
+                        }
+                        else{
+                            peso.requestFocus();
+                        }
+                    }
+                    break;
+
+            }
+        }
     }
 
     public static void main(String args[]){
