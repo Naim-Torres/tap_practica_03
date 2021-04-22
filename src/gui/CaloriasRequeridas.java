@@ -6,6 +6,7 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -41,6 +42,8 @@ public class CaloriasRequeridas extends JFrame {
     private final String DA_PESO = "tu peso?"; //titulo predeterminado en el campo peso
     private boolean validaNombre = false; //Indicacion de la validadcion de nombre
     private boolean validaPeso = false; //Indicación de validacion de peso
+    JPanel pActiv = new JPanel();
+    JPanel pDesAct = new JPanel();
 
     public CaloriasRequeridas() {
         Container base = getContentPane();
@@ -59,10 +62,10 @@ public class CaloriasRequeridas extends JFrame {
         base.add(titulo, BorderLayout.NORTH);
         base.add(datosC, BorderLayout.CENTER);
         //el método formarPanelResultados() integra la segunda seccion de la GUI
-        //base.add(formarPanelResultados(),BorderLayout.SOUTH);
+        base.add(formarPanelResultados(),BorderLayout.SOUTH);
         this.setVisible(true);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.setSize(700, 450);
+        this.setSize(850, 500);
 
     }
     public JPanel formarPanelCampos(){
@@ -74,7 +77,7 @@ public class CaloriasRequeridas extends JFrame {
         //Se crea el panel, lo titulos, y demas elementos que los conforman
         JPanel camposPanel = new JPanel();
         //Los titulos de los campos inician su nombre con t
-        JLabel tNombre = new JLabel("Nombre: ");
+        JLabel tNombre = new JLabel("Nombre (1er nombre y Apellido Paterno): ");
         JLabel tFechaNac = new JLabel("Fecha Nacimiento ");
         tFechaNac.setHorizontalAlignment(SwingConstants.RIGHT);
         tAnios = new JLabel("Años: "+MIN_EDAD);
@@ -83,7 +86,7 @@ public class CaloriasRequeridas extends JFrame {
         JLabel tEstatura = new JLabel("Estatura (Mts): ");
         //3b
         nombre = new JTextField(DA_NOMBRE,20);
-        peso = new JTextField(DA_PESO,5);
+        peso = new JTextField(DA_PESO,8);
         masculino = new JRadioButton("Masculino");
         femenino = new JRadioButton("Femenino");
         ButtonGroup gSexo = new ButtonGroup();
@@ -97,10 +100,11 @@ public class CaloriasRequeridas extends JFrame {
         Calendar fechaf = Calendar.getInstance(); //fecha final o mas antigua
         fechaf.add(Calendar.YEAR,-MAX_EDAD);
         //3d
-        SpinnerDateModel dma = new SpinnerDateModel(new Date(),null,null,Calendar.DATE);
+        Date fechaI = fechai.getTime();
+        SpinnerDateModel dma = new SpinnerDateModel(fechaI,null,null,Calendar.DATE);
         fechaNac = new JSpinner(dma);
         //3f
-        JSpinner.DateEditor fmda = new JSpinner.DateEditor(fechaNac,"yyyy/mm/dd");
+        JSpinner.DateEditor fmda = new JSpinner.DateEditor(fechaNac,"yyyy/MM/dd");
         fechaNac.setEditor(fmda);
         //5d
         SpinnerNumberModel modEst = new SpinnerNumCiclico(MIN_ESTATURA,MAX_ESTATURA);
@@ -190,7 +194,7 @@ public class CaloriasRequeridas extends JFrame {
     }
     public ImageIcon imagenActividad(int a){
         String ruta = "/imagenes/";
-        String nombreImagen[]={"ligera.jpg","moderada.jpg","muyactiva.jpg","sedentario.jpg"};
+        String nombreImagen[]={"sedentario.jpg","ligera.jpg","moderada.jpg","muyactiva.jpg"};
         URL url = getClass().getResource(ruta+nombreImagen[a]);
 
         Image reescalado = (new ImageIcon(url).getImage()).getScaledInstance(100,93,Image.SCALE_SMOOTH);
@@ -206,9 +210,9 @@ public class CaloriasRequeridas extends JFrame {
     }
     public JPanel crearSelecionActividad(){
         JPanel seleccion = new JPanel();
-        JPanel pActiv = new JPanel();
-        JPanel pDesAct = new JPanel();
+
         seleccion.setLayout(new BorderLayout());
+        AdmonAccion admoAccion = new AdmonAccion();
         //7e
         actividad = new JComboBox(ACTIVIDADES);
         descripcionActividad = new JLabel(textoActividad(0),imagenActividad(0),SwingConstants.CENTER);
@@ -233,6 +237,8 @@ public class CaloriasRequeridas extends JFrame {
         );
         seleccion.add(pActiv,BorderLayout.NORTH);
         seleccion.add(pDesAct,BorderLayout.SOUTH);
+        actividad.setActionCommand("cImgAct");
+        actividad.addActionListener(admoAccion);
         return seleccion;
     }
 
@@ -281,6 +287,7 @@ public class CaloriasRequeridas extends JFrame {
         }
     }
     private class AdmonAccion implements ActionListener{
+
         @Override
         public void actionPerformed(ActionEvent ae){
             switch(ae.getActionCommand()){
@@ -288,6 +295,7 @@ public class CaloriasRequeridas extends JFrame {
                     validaNombre = false;
                     if(nombre.getText() !="" && !nombre.getText().equals(DA_NOMBRE)){
                         validaNombre = true;
+                        agregar.setEnabled(true);
                         fechaNac.requestFocus();
                     }
                     else
@@ -297,8 +305,9 @@ public class CaloriasRequeridas extends JFrame {
                     int vPeso = 0;
                     validaPeso = false;
                     if(peso.getText()!="" && !peso.getText().equals(DA_PESO)){
+                        validaPeso = true;
                         if(Integer.parseInt(peso.getText()) < 40 || Integer.parseInt(peso.getText()) > 120){
-                            validaPeso = true;
+
                             JOptionPane.showMessageDialog(null,"Peso fuera de los limtes (mayor a 40 kgs y menor a 120 kgs)");
                             peso.requestFocus();
                         }
@@ -308,9 +317,151 @@ public class CaloriasRequeridas extends JFrame {
                     }
                     break;
 
+                case "bCalcular":
+                    if((validaPeso && validaNombre)|| nombre.getText()!=" "
+                            && peso.getText()!=" " && !nombre.getText().equals(DA_NOMBRE)
+                            && !peso.getText().equals(DA_PESO))
+                    {
+                        calculoKilocal.setText(nombre.getText()+" requiere "+
+                                String.format("%8.0f",calculoKc())+" kilocalorias diarias " );
+                        agregar.setEnabled(true);
+                    }
+                    else
+                        JOptionPane.showMessageDialog(null,"Falta dato del nombre y/o peso");
+                    break;
+
+                case "bAgregar":
+                    if (validaNombre && validaPeso)
+                    {
+                        if(tituloRelacion.getText()=="")
+                        {
+                            String tituloL=String.format("\n%-35s","NOMBRE");
+                                tituloL += String.format("%-10s","EDAD");
+                                tituloL += String.format("%-8s","PESO");
+                                tituloL += String.format("%-15s","ESTATURA");
+                                tituloL += String.format("%-30s","TIPO ACTIVIDAD");
+                                tituloL += String.format("%-30s","KILOKALORIAS diarias");
+                            tituloRelacion.setText(tituloL);
+                        }
+
+                            String renglon1=String.format("%-35s",nombre.getText());
+                                renglon1 += String.format("%-15d",edad);
+                                renglon1 += String.format("%-10s",peso.getText());
+                                renglon1 += String.format("%-20.2f",(Double)estatura.getValue());
+                                renglon1 += String.format("%-40.25s",actividad.getSelectedItem());
+                                renglon1 += String.format("%-30.0f\n",calculoKc());
+
+                        relacion.append(renglon1);
+                        agregar.setEnabled(false);
+
+                    }
+                    break;
+
+                case "bBorrar":
+                    Calendar origen = Calendar.getInstance();
+                    origen.add(Calendar.YEAR, -MIN_EDAD);
+                    nombre.setText(DA_NOMBRE);
+                    peso.setText(DA_PESO);
+                    estatura.setValue(MIN_ESTATURA);
+                    fechaNac.setValue(origen.getTime());
+                    ((JLabel)(pDesAct.getComponent(0))).setText(textoActividad(0));
+                    ((JLabel)(pDesAct.getComponent(0))).setIcon(imagenActividad(0));
+                    break;
+
+                case "bTerminar":
+                    origen = Calendar.getInstance();
+                    origen.add(Calendar.YEAR, -MIN_EDAD);
+                    nombre.setText(DA_NOMBRE);
+                    peso.setText(DA_PESO);
+                    estatura.setValue(MIN_ESTATURA);
+                    fechaNac.setValue(origen.getTime());
+                    agregar.setEnabled(false);
+                    break;
+
+                case "cImgAct":
+                    int opcion = actividad.getSelectedIndex();
+                    ((JLabel)(pDesAct.getComponent(0))).setText(textoActividad(opcion));
+                    ((JLabel)(pDesAct.getComponent(0))).setIcon(imagenActividad(opcion));
+                    break;
+
             }
         }
     }
+    public JPanel formarPanelResultados() {
+
+        JPanel resultados = new JPanel();
+        JPanel calculos = new JPanel();
+        JPanel resultado = new JPanel();
+        JPanel lista = new JPanel();
+        AdmonAccion admonAccion = new AdmonAccion();
+        resultados.setLayout(new BorderLayout());
+        lista.setLayout(new BorderLayout());
+
+
+        calcularCal = new JButton("Calcular calorias");
+        agregar = new JButton("Agregar a lista");
+        borrar = new JButton("Borrar Datos");
+        terminar = new JButton("Terminar");
+
+        calculoKilocal = new JLabel("");
+        tituloRelacion = new JLabel("");
+        relacion = new JTextArea();
+
+        calculos.add(calcularCal);
+        calculos.add(agregar);
+        calculos.add(borrar);
+        calculos.add(terminar);
+        resultado.add(calculoKilocal);
+        calcularCal.setActionCommand("bCalcular");
+        calcularCal.addActionListener(admonAccion);
+        agregar.setActionCommand("bAgregar");
+        agregar.addActionListener(admonAccion);
+        borrar.setActionCommand("bBorrar");
+        borrar.addActionListener(admonAccion);
+        terminar.setActionCommand("bTerminar");
+        terminar.addActionListener(admonAccion);
+
+
+        JScrollPane areaScrollPane=new JScrollPane(relacion);
+        lista.add(tituloRelacion,BorderLayout.NORTH);
+        lista.add(areaScrollPane,BorderLayout.SOUTH);
+        resultados.add(calculos,BorderLayout.NORTH);
+        resultados.add(resultado,BorderLayout.CENTER);
+        resultados.add(lista,BorderLayout.SOUTH);
+        agregar.setEnabled(false);
+
+        return resultados;
+    }
+    private double calculoKc()
+    {double kc=0;
+        double factorActividadM[]={1.0,1.11,1.25,1.48};
+        double factorActividadF[]={1.0,1.12,1.27,1.45};
+        double vPeso=0;
+        double vEstatura=0;
+
+        try{
+            vPeso=Double.parseDouble(peso.getText());
+            vEstatura=(double) estatura.getValue();
+
+            if(masculino.isSelected())
+            {
+                double fa=factorActividadM[actividad.getSelectedIndex()];
+
+                kc=((10*vPeso)+(6.25*vEstatura)-(5*edad)+5)*fa;
+
+            }else if(femenino.isSelected()){
+
+                double fa=factorActividadF[actividad.getSelectedIndex()];
+                kc=((10*vPeso)+(6.25*vEstatura)-(5*edad)-161)*fa;
+            } return kc;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return kc;
+    }
+
+
 
     public static void main(String args[]){
         CaloriasRequeridas calo = new CaloriasRequeridas();
